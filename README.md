@@ -16,7 +16,7 @@ Spring Boot blogging application with MySQL database, CI/CD pipeline, and comple
 ### Run MySQL Only
 ```bash
 docker-compose -f docker-compose-mysql.yml up -d
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 ### Run Full Stack (MySQL + App)
@@ -111,10 +111,10 @@ Three pillars of observability:
 
 ```bash
 # Run tests
-./mvnw test
+mvn test
 
 # Run with coverage
-./mvnw test jacoco:report
+mvn test jacoco:report
 
 # View coverage report
 open target/site/jacoco/index.html
