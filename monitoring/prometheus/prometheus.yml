@@ -18,9 +18,3 @@ scrape_configs:
           environment: 'docker'
     scrape_interval: 10s
 
-  - job_name: 'mysql'
-    static_configs:
-      - targets: ['tp2_devops_mysql:3306']
-        labels:
-          application: 'mysql'
-
