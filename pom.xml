@@ -78,14 +78,16 @@
 		<groupId>io.micrometer</groupId>
 		<artifactId>micrometer-registry-prometheus</artifactId>
 	</dependency>
-	<!-- Observability: Distributed Tracing -->
+	<!-- Observability: Distributed Tracing with Sleuth and Zipkin -->
 	<dependency>
-		<groupId>io.micrometer</groupId>
-		<artifactId>micrometer-tracing-bridge-brave</artifactId>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-sleuth</artifactId>
+		<version>3.1.3</version>
 	</dependency>
 	<dependency>
-		<groupId>io.zipkin.reporter2</groupId>
-		<artifactId>zipkin-reporter-brave</artifactId>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-sleuth-zipkin</artifactId>
+		<version>3.1.3</version>
 	</dependency>
 	<!-- Observability: Structured Logging -->
 	<dependency>
