@@ -62,3 +62,12 @@ images/
 *.sqlite
 *.sql.backup
 
+### Logs ###
+logs/
+
+### Monitoring Data ###
+monitoring/data/
+prometheus_data/
+grafana_data/
+loki_data/
+

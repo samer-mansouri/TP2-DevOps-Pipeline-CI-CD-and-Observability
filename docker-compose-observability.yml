@@ -1,0 +1,163 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  tp2_devops_mysql:
+    image: mysql:8.0
+    container_name: tp2_devops_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: superadmin123
+      MYSQL_DATABASE: blogging_app_apis
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - tp2_devops_mysql_data:/var/lib/mysql
+    networks:
+      - tp2_devops_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psuperadmin123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Spring Boot Application
+  tp2_devops_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tp2_devops_blogging_app:latest
+    container_name: tp2_devops_app
+    restart: always
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://tp2_devops_mysql:3306/blogging_app_apis?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: superadmin123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+    volumes:
+      - tp2_devops_app_images:/app/images
+      - tp2_devops_app_logs:/app/logs
+    networks:
+      - tp2_devops_network
+    depends_on:
+      tp2_devops_mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: tp2_devops_prometheus
+    restart: always
+    ports:
+      - "9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - tp2_devops_network
+    depends_on:
+      - tp2_devops_app
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: tp2_devops_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - tp2_devops_network
+    depends_on:
+      - prometheus
+      - loki
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:2.8.3
+    container_name: tp2_devops_loki
+    restart: always
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    networks:
+      - tp2_devops_network
+
+  # Promtail - Log Shipper
+  promtail:
+    image: grafana/promtail:2.8.3
+    container_name: tp2_devops_promtail
+    restart: always
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - tp2_devops_app_logs:/var/log/app
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - tp2_devops_network
+    depends_on:
+      - loki
+
+  # Zipkin - Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    container_name: tp2_devops_zipkin
+    restart: always
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - tp2_devops_network
+
+volumes:
+  tp2_devops_mysql_data:
+    name: tp2_devops_mysql_data
+  tp2_devops_app_images:
+    name: tp2_devops_app_images
+  tp2_devops_app_logs:
+    name: tp2_devops_app_logs
+  prometheus_data:
+    name: tp2_devops_prometheus_data
+  grafana_data:
+    name: tp2_devops_grafana_data
+  loki_data:
+    name: tp2_devops_loki_data
+
+networks:
+  tp2_devops_network:
+    name: tp2_devops_network
+    driver: bridge
+

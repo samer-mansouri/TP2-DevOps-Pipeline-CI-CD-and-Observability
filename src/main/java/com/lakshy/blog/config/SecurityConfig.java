@@ -37,7 +37,9 @@ public class SecurityConfig {
 			"/swagger-ui/**",
 			"/webjars/**",
 			"/actuator/health/**",
-			"/actuator/info/**"
+			"/actuator/info/**",
+			"/actuator/prometheus/**",
+			"/actuator/metrics/**"
 	};
 	
 	@Autowired
