@@ -64,8 +64,7 @@ services:
     image: prom/prometheus:v2.45.0
     container_name: tp2_devops_prometheus
     restart: always
-    ports:
-      - "9091:9090"
+    network_mode: host
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -75,8 +74,6 @@ services:
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    networks:
-      - tp2_devops_network
     depends_on:
       - tp2_devops_app
 
