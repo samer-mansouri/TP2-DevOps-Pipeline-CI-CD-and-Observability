@@ -22,8 +22,8 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Create a non-root user for security
 RUN groupadd -r spring && useradd -r -g spring spring
 
-# Create directory for image uploads
-RUN mkdir -p /app/images && chown -R spring:spring /app
+# Create directories for image uploads and logs
+RUN mkdir -p /app/images /app/logs && chown -R spring:spring /app
 
 # Copy the jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
