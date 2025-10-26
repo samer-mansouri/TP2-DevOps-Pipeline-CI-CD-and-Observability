@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.lakshy.blog.services.UserService;
 
-@SpringBootTest
+@SpringBootTest(properties = {"springfox.documentation.enabled=false"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class BloggingAppApisApplicationTests {
 
