@@ -18,7 +18,7 @@
         </encoder>
     </appender>
     
-    <!-- File Appender (disabled in Docker, only for local development) -->
+    <!-- File Appender (disabled in Docker and tests, only for local development) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>/app/logs/blogging-app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -40,6 +40,13 @@
     <logger name="org.hibernate.SQL" level="DEBUG"/>
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
     
+    <!-- Test profile - no file appender -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    
     <!-- Use JSON format in production, standard format in development -->
     <springProfile name="default,dev">
         <root level="INFO">
@@ -53,4 +60,3 @@
         </root>
     </springProfile>
 </configuration>
-
