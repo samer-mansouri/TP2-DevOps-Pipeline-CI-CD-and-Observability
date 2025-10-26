@@ -35,7 +35,9 @@ public class SecurityConfig {
 			"/v2/api-docs",
 			"/swagger-resources/**",
 			"/swagger-ui/**",
-			"/webjars/**"
+			"/webjars/**",
+			"/actuator/health/**",
+			"/actuator/info/**"
 	};
 	
 	@Autowired

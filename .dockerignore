@@ -1,0 +1,59 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.metadata
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+*.md
+README*
+DOCKER-SETUP.md
+
+# Scripts
+start-dev.sh
+stop-dev.sh
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Images
+images/
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Maven wrapper jar (we use Maven in the build stage)
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment files
+.env
+.env.local
+

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  tp2_devops_mysql:
+    image: mysql:8.0
+    container_name: tp2_devops_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: superadmin123
+      MYSQL_DATABASE: blogging_app_apis
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - tp2_devops_mysql_data:/var/lib/mysql
+    networks:
+      - tp2_devops_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psuperadmin123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  tp2_devops_mysql_data:
+    name: tp2_devops_mysql_data
+
+networks:
+  tp2_devops_network:
+    name: tp2_devops_network
+    driver: bridge
+
