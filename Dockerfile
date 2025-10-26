@@ -4,17 +4,12 @@ FROM maven:3.8.6-openjdk-11-slim AS build
 
 WORKDIR /app
 
-# Copy pom.xml first to leverage Docker cache for dependencies
+# Copy pom.xml and source code
 COPY pom.xml .
-
-# Download dependencies (this layer will be cached if pom.xml doesn't change)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
 COPY src ./src
 
 # Build the application (skip tests for faster builds)
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
 # Stage 2: Create the runtime image
 FROM openjdk:11-jre-slim
