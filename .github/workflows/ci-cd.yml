@@ -76,36 +76,38 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
-    - name: Debug secrets
+    - name: Check for Docker Hub secrets
+      id: check_secrets
       run: |
-        echo "Checking if secrets are set..."
-        if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-          echo "ERROR: DOCKERHUB_USERNAME is not set!"
+        if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+          echo "DOCKERHUB_USERNAME and DOCKERHUB_TOKEN are set"
+          echo "secrets_available=true" >> $GITHUB_OUTPUT
         else
-          echo "DOCKERHUB_USERNAME is set"
-        fi
-        if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-          echo "ERROR: DOCKERHUB_TOKEN is not set!"
-        else
-          echo "DOCKERHUB_TOKEN is set"
+          echo "WARNING: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN not set. Skipping Docker Hub push."
+          echo "secrets_available=false" >> $GITHUB_OUTPUT
         fi
     
     - name: Login to DockerHub
+      if: steps.check_secrets.outputs.secrets_available == 'true'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
           
     - name: Build and push Docker image
+      id: build_push
       uses: docker/build-push-action@v4
       with:
         context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:latest,${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:${{ github.sha }}
+        push: ${{ steps.check_secrets.outputs.secrets_available == 'true' }}
+        tags: |
+          ${{ steps.check_secrets.outputs.secrets_available == 'true' && format('{0}/tp2-blogging-app:latest', secrets.DOCKERHUB_USERNAME) || 'tp2-blogging-app:latest' }}
+          ${{ steps.check_secrets.outputs.secrets_available == 'true' && format('{0}/tp2-blogging-app:{1}', secrets.DOCKERHUB_USERNAME, github.sha) || format('tp2-blogging-app:{0}', github.sha) }}
         cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:latest
         cache-to: type=inline
         
     - name: Run Trivy vulnerability scanner on image
+      if: steps.check_secrets.outputs.secrets_available == 'true'
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:latest
@@ -127,8 +129,14 @@ jobs:
     - name: Pipeline Summary
       run: |
         echo "Pipeline completed successfully!"
-        echo "Docker image built and pushed to DockerHub"
+        if [ "${{ steps.check_secrets.outputs.secrets_available }}" == "true" ]; then
+          echo "Docker image built and pushed to DockerHub"
+          echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:latest"
+          echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:${{ github.sha }}"
+        else
+          echo "Docker image built locally (Docker Hub secrets not configured)"
+          echo "Image: tp2-blogging-app:latest"
+          echo "To push to Docker Hub, add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets"
+        fi
         echo "Git SHA: ${{ github.sha }}"
-        echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:latest"
-        echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/tp2-blogging-app:${{ github.sha }}"
 
